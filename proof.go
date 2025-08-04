@@ -27,12 +27,13 @@ func NewProofOfWork(b *Block) *ProofOfWork {
     return pow
 }
 
+// Run finds the nonce and hash that pass the difficulty and returns them
 func (pow *ProofOfWork) Run() (int, []byte) {
     var hashInt big.Int
     var hash [32]byte
     nonce := 0
 
-    fmt.Printf("Mining the block containing \"%s\",\n", pow.block.Data)
+    fmt.Printf("Mining the block containing \"%s\"\n", pow.block.Data)
     for nonce < maxNonce {
 	data := pow.prepareData(nonce)
 	hash = sha256.Sum256(data)
@@ -62,3 +63,15 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
     return data
 }
 
+// If you just compare pow.block.Hash to the target,
+// you're trusting the block’s stored hash blindly. 
+// That’s dumb and unsafe.
+func (pow *ProofOfWork) Validate() bool {
+    var hashInt big.Int
+    
+    data := pow.prepareData(pow.block.Nonce)
+    hash := sha256.Sum256(data)
+    hashInt.SetBytes(hash[:])
+    
+    return hashInt.Cmp(pow.target) == -1
+}
